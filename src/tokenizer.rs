@@ -29,18 +29,20 @@ impl Tokenizer {
                 let mut parsed_trans = HashMap::new();
                 for t in transition_map.lines() {
                         let v: Vec<&str> = t.split("=>").map(|s| s.trim()).collect();
+                        if v[0].is_empty() {
+                                continue;
+                        }
 			let v_bytes = v[0].bytes().collect();
                         let start_state: State = State(utils::get_hash_val(&v_bytes));
-                        let mut tokens: Vec<&str> = v[1].split("|").collect();
-                        if tokens.is_empty() {
-                                tokens.push(v[1]);
-                        }
+                        let mut tokens: Vec<&str> = v[1].split("|").map(|t| t.trim()).collect();
 			let v2_bytes = v[2].bytes().collect();
                         let end_state: State = State(utils::get_hash_val(&v2_bytes));
+
                         let x = parsed_trans.entry(start_state).or_insert(HashMap::new());
                         for t in tokens {
 				let mut t_bytes = t.bytes().collect();
-                                (*x).entry(TokenType(utils::get_hash_val(&t_bytes))).or_insert(end_state.to_owned());
+                                let token_type = TokenType(utils::get_hash_val(&t_bytes));
+                                (*x).entry(token_type).or_insert(end_state.to_owned());
                         }
                 };
                 parsed_trans
@@ -49,6 +51,9 @@ impl Tokenizer {
                 let mut token_map = HashMap::new();
                 for t in tokens.lines() {
                         let v: Vec<&str> = t.split("=>").map(|s| s.trim()).collect();
+                        if v[0].is_empty() {
+                                continue;
+                        }
                         let mut vals: Vec<u8> = Vec::new();
                         if v[1].contains("..") {
                                 let mut bounds: Vec<u8> = v[1].split("..").map(|c| c.parse::<u8>().unwrap()).collect();
@@ -85,6 +90,7 @@ impl Tokenizer {
                 while !raw_bytes.is_empty() {
                         println!("Byte: {:?}", raw_bytes[0]);
                         println!("curr_token: {:?}", curr_token);
+                        println!("curr_state: {:?}", curr_state);
                         println!("tokens: {:?}", self.tokens);    
 
                         let curr_byte = raw_bytes[0];
@@ -97,7 +103,7 @@ impl Tokenizer {
                                 None => State(0),
                                 Some(v) => {
                                         curr_token.push(raw_bytes.remove(0));
-                                        if v.to_owned() != curr_state {
+                                        if v != &curr_state {
                                                 self._emit_token(Token { t: curr_byte_t.to_owned(), value: curr_token.to_owned()} );
                                                 curr_token.clear();
                                         };
@@ -120,6 +126,50 @@ mod tests {
 
         use super::*;
         use utils::*;
+        use std::collections::HashMap;
+
+        #[test]
+        fn test_compile_states() {
+
+                let transitions =
+                "
+                Alpha => Alpha | Number => Alpha
+                Slash => Slash => Pos
+                Pos => Alpha => Pos
+                Number => Number => Number
+                Number => Alpha => Alpha
+                Whitespace => Whitespace => Whitespace
+                Punctuation => Punctuation => Punctuation
+                ";
+
+                let transition_map: HashMap<State, HashMap<TokenType, State>> = Tokenizer::compile_states(&transitions);
+
+                let test_state_alpha = State(utils::get_hash_val(&String::from("Alpha").into_bytes()));
+                let test_token_type_alpha = TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes()));
+
+                assert_eq!(transition_map[&test_state_alpha][&test_token_type_alpha], test_state_alpha);
+        }
+
+
+        #[test]
+        fn test_compile_tokens() {
+
+                let tokens =
+                "
+                Alpha => 65..123
+                Number => 48..57
+                Whitespace => 9,10,13,32
+                Punctuation => 33..46
+                Punctuation => 58..65
+                Slash => 47
+                ";
+
+                let token_map: HashMap<u8, TokenType> = Tokenizer::compile_tokens_ascii(&tokens);
+                let test_token_type_alpha = TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes()));
+
+                assert_eq!(token_map[&65], test_token_type_alpha);
+                assert_eq!(token_map[&122], test_token_type_alpha);
+        }
 
         #[test]
         fn tokenize_test_1() {
@@ -148,11 +198,13 @@ mod tests {
 
                 let bs: Vec<u8> = vec![97, 98, 99];
 
-                tokenizer.tokenize(&bs, &tokens, &transitions);
+                tokenizer.tokenize(&bs, &transitions, &tokens);
+                let test_token = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: bs };
 
-                println!("{:?}", bs);
                 println!("{:?}", tokenizer.get_tokens());
+                println!("{:?}", &test_token);
 
-                assert_eq!(tokenizer.get_tokens()[0], Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: bs } );
+                assert_eq!(tokenizer.get_tokens()[0], test_token);
         }
 }
+
