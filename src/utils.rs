@@ -6,4 +6,8 @@ pub mod utils {
         };
         hash_val
     }
+
+    pub fn levenshtein_distance(word1: &Vec<u8>, word2: &Vec<u8>) -> u32 {
+        0
+    }
 }

@@ -131,19 +131,34 @@ mod tests {
         use utils::*;
         use std::collections::HashMap;
 
-        #[test]
-        fn test_compile_states() {
 
-                let transitions =
+        static tokens: &'static str = 
                 "
+                Alpha => 65..123
+                Number => 48..57
+                Whitespace => 9,10,13,32
+                Punctuation => 33..46
+                Punctuation => 58..65
+                Slash => 47
+                ";
+
+        static transitions: &'static str = 
+                "
+                Start => Alpha => Alpha
+                Start => Number => Number
+                Start => Whitespace => Whitespace
+                Start => Punctuation => Punctuation
+                Start => Slash => Pos
                 Alpha => Alpha | Number => Alpha
-                Slash => Slash => Pos
-                Pos => Alpha => Pos
+                Pos => Alpha | Whitespace => Pos
                 Number => Number => Number
                 Number => Alpha => Alpha
                 Whitespace => Whitespace => Whitespace
                 Punctuation => Punctuation => Punctuation
                 ";
+
+        #[test]
+        fn test_compile_states() {
 
                 let transition_map: HashMap<State, HashMap<TokenType, State>> = Tokenizer::compile_states(&transitions);
 
@@ -157,16 +172,6 @@ mod tests {
         #[test]
         fn test_compile_tokens() {
 
-                let tokens =
-                "
-                Alpha => 65..123
-                Number => 48..57
-                Whitespace => 9,10,13,32
-                Punctuation => 33..46
-                Punctuation => 58..65
-                Slash => 47
-                ";
-
                 let token_map: HashMap<u8, TokenType> = Tokenizer::compile_tokens_ascii(&tokens);
                 let test_token_type_alpha = TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes()));
 
@@ -176,30 +181,6 @@ mod tests {
 
         #[test]
         fn tokenize_test_1() {
-                let tokens =
-                "
-                Alpha => 65..123
-                Number => 48..57
-                Whitespace => 9,10,13,32
-                Punctuation => 33..46
-                Punctuation => 58..65
-                Slash => 47
-                ";
-
-                let transitions =
-                "
-                Start => Alpha => Alpha
-                Start => Number => Number
-                Start => Whitespace => Whitespace
-                Start => Punctuation => Punctuation
-                Alpha => Alpha | Number => Alpha
-                Slash => Slash => Pos
-                Pos => Alpha => Pos
-                Number => Number => Number
-                Number => Alpha => Alpha
-                Whitespace => Whitespace => Whitespace
-                Punctuation => Punctuation => Punctuation
-                ";
 
                 let mut tokenizer = Tokenizer::new();
 
@@ -212,6 +193,30 @@ mod tests {
                 println!("{:?}", &test_token);
 
                 assert_eq!(tokenizer.get_tokens()[0], test_token);
+        }
+
+        #[test]
+        #[ignore]
+        fn tokenize_test_2() {
+
+                let mut tokenizer = Tokenizer::new();
+
+                let bs: Vec<u8> = String::from("foo / bar").into_bytes();
+
+                let test_alpha = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: String::from("foo").into_bytes() };
+                let test_white = Token { t: TokenType(utils::get_hash_val(&String::from("Whitespace").into_bytes())), value: String::from(" ").into_bytes() };
+                let test_slash = Token { t: TokenType(utils::get_hash_val(&String::from("Slash").into_bytes())), value: String::from("/").into_bytes() };
+                let test_pos = Token { t: TokenType(utils::get_hash_val(&String::from("Pos").into_bytes())), value: String::from(" bar").into_bytes() };
+
+                tokenizer.tokenize(&bs, &transitions, &tokens);
+                let test_tokens = vec![&test_alpha, &test_white, &test_slash, &test_pos];
+
+                println!("{:?}", &test_tokens);
+
+                assert_eq!(tokenizer.get_tokens()[0], test_alpha);
+                assert_eq!(tokenizer.get_tokens()[1], test_white);
+                assert_eq!(tokenizer.get_tokens()[2], test_slash);
+                assert_eq!(tokenizer.get_tokens()[3], test_pos);
         }
 }
 
