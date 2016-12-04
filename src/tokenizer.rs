@@ -83,7 +83,8 @@ impl Tokenizer {
                 let mut curr_token: &mut Vec<u8> = &mut Vec::new();
                 let mut raw_bytes = token_str.clone();
                 let start_state = State(utils::get_hash_val(&String::from("Start").into_bytes()));
-                let mut curr_state = start_state;
+                let mut curr_state = State(utils::get_hash_val(&String::from("Start").into_bytes()));
+                let mut last_byte_t = TokenType(0);
 
                 let s_map: HashMap<State, HashMap<TokenType, State>> = Tokenizer::compile_states(state_map);
                 let t_map: HashMap<u8, TokenType> = Tokenizer::compile_tokens_ascii(token_map);
@@ -101,13 +102,17 @@ impl Tokenizer {
                         };
 
                         let new_state = match s_map.get(&curr_state).unwrap().get(&curr_byte_t) {
-                                None => State(utils::get_hash_val(&String::from("Start").into_bytes())),
+                                None => {
+                                        self._emit_token(Token { t: last_byte_t.to_owned(), value: curr_token.to_owned()} );
+                                        curr_token.clear();                                         
+                                        State(utils::get_hash_val(&String::from("Start").into_bytes()))
+                                },
                                 Some(v) => {
-                                        if State(utils::get_hash_val(&String::from("Start").into_bytes())) != curr_state {
+                                        if v == &curr_state && curr_state != State(utils::get_hash_val(&String::from("Start").into_bytes())) {
                                                 curr_token.push(raw_bytes.remove(0));
                                         }
                                         if v != &curr_state && curr_state != State(utils::get_hash_val(&String::from("Start").into_bytes())) {
-                                                self._emit_token(Token { t: curr_byte_t.to_owned(), value: curr_token.to_owned()} );
+                                                self._emit_token(Token { t: last_byte_t.to_owned(), value: curr_token.to_owned()} );
                                                 curr_token.clear();
                                         };
                                         v.to_owned()
@@ -118,6 +123,7 @@ impl Tokenizer {
                                 self._emit_token(Token { t: curr_byte_t.to_owned(), value: curr_token.to_owned() } );
                         }
 
+                        last_byte_t = curr_byte_t;
                         curr_state = new_state;
                 }
 
@@ -148,9 +154,12 @@ mod tests {
                 Start => Number => Number
                 Start => Whitespace => Whitespace
                 Start => Punctuation => Punctuation
-                Start => Slash => Pos
+                Start => Slash => Slash
+                Slash => Slash => Slash
+                Slash => Whitespace => Whitespace
+                Slash => Alpha => Pos
                 Alpha => Alpha | Number => Alpha
-                Pos => Alpha | Whitespace => Pos
+                Pos => Alpha => Pos
                 Number => Number => Number
                 Number => Alpha => Alpha
                 Whitespace => Whitespace => Whitespace
@@ -196,7 +205,6 @@ mod tests {
         }
 
         #[test]
-        #[ignore]
         fn tokenize_test_2() {
 
                 let mut tokenizer = Tokenizer::new();
@@ -206,17 +214,20 @@ mod tests {
                 let test_alpha = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: String::from("foo").into_bytes() };
                 let test_white = Token { t: TokenType(utils::get_hash_val(&String::from("Whitespace").into_bytes())), value: String::from(" ").into_bytes() };
                 let test_slash = Token { t: TokenType(utils::get_hash_val(&String::from("Slash").into_bytes())), value: String::from("/").into_bytes() };
-                let test_pos = Token { t: TokenType(utils::get_hash_val(&String::from("Pos").into_bytes())), value: String::from(" bar").into_bytes() };
+                let test_pos = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: String::from("bar").into_bytes() };
 
                 tokenizer.tokenize(&bs, &transitions, &tokens);
                 let test_tokens = vec![&test_alpha, &test_white, &test_slash, &test_pos];
 
                 println!("{:?}", &test_tokens);
+                println!("{:?}", tokenizer.get_tokens());
 
+                assert_eq!(tokenizer.get_tokens().len(), 5);
                 assert_eq!(tokenizer.get_tokens()[0], test_alpha);
                 assert_eq!(tokenizer.get_tokens()[1], test_white);
                 assert_eq!(tokenizer.get_tokens()[2], test_slash);
-                assert_eq!(tokenizer.get_tokens()[3], test_pos);
+                assert_eq!(tokenizer.get_tokens()[3], test_white);
+                assert_eq!(tokenizer.get_tokens()[4], test_pos);
         }
 }
 
