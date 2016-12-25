@@ -172,6 +172,14 @@ mod tests {
                 Punctuation => Punctuation => Punctuation
                 ";
 
+        static brown_ca01: &'static str = "
+
+                The/at Fulton/np-tl County/nn-tl Grand/jj-tl Jury/nn-tl said/vbd Friday/nr an/at investigation/nn of/in Atlanta's/np$ recent/jj primary/nn election/nn produced/vbd ``/`` no/at evidence/nn ''/'' that/cs any/dti irregularities/nns took/vbd place/nn ./.
+
+
+        ";
+
+
         #[test]
         fn test_compile_states() {
 
@@ -256,11 +264,9 @@ mod tests {
 
                 let test_alpha = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: String::from("foo").into_bytes() };
                 let test_white = Token { t: TokenType(utils::get_hash_val(&String::from("Whitespace").into_bytes())), value: String::from("  ").into_bytes() };
-                //let test_unknown = Token { t: TokenType(utils::get_hash_val(&String::from("Unknown").into_bytes())), value: String::from("^").into_bytes() };
 
                 let test_state_alpha = State(utils::get_hash_val(&String::from("Alpha").into_bytes()));
                 let test_state_white = State(utils::get_hash_val(&String::from("Whitespace").into_bytes()));
-                //let test_state_unkown = State(utils::get_hash_val(&String::from("Unknown").into_bytes()));
 
                 let mut tokenizer = Tokenizer::new(&tokens, &transitions);
 
@@ -276,6 +282,15 @@ mod tests {
                 assert_eq!(tokenized.1[1], test_state_white);
                 assert_eq!(tokenized.1[2], test_state_alpha);
 
+        }
+
+        #[test]
+        fn tokenize_test_4() {
+                let mut tokenizer = Tokenizer::new(&tokens, &transitions);
+
+                let tokenized: (Vec<Token>, Vec<State>) = tokenizer.tokenize(&brown_ca01.as_bytes().to_vec());
+
+                assert_eq!(tokenized.0.len(), 100);                
         }
 }
 
