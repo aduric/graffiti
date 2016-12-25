@@ -4,15 +4,15 @@ use std::str;
 use utils::*;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct TokenType(u32);
+pub struct TokenType(pub u32);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct State(u32);
+pub struct State(pub u32);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Token {
-        value: Vec<u8>,
-        t: TokenType
+        pub value: Vec<u8>,
+        pub t: TokenType
 }
 
 pub struct Tokenizer {
