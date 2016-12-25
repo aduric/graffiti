@@ -98,10 +98,17 @@ impl Tokenizer {
 
                         let new_state = match self.transition_map.get(&curr_state).unwrap().get(&curr_byte_t) {
                                 None => {
-                                        tokens.push(Token { t: last_byte_t.to_owned(), value: curr_token.to_owned()});
-                                        states.push(curr_state.to_owned());
-                                        curr_token.clear();                                         
-                                        State(utils::get_hash_val(&String::from("Start").into_bytes()))
+                                        let start_state = State(utils::get_hash_val(&String::from("Start").into_bytes()));
+                                        let mut s = &curr_state;
+                                        if curr_byte_t != TokenType(0) {
+                                                tokens.push(Token { t: last_byte_t.to_owned(), value: curr_token.to_owned()});
+                                                states.push(curr_state.to_owned());
+                                                curr_token.clear();                                          
+                                                s = &start_state;
+                                        } else {
+                                                raw_bytes.remove(0);
+                                        };
+                                        s.to_owned()
                                 },
                                 Some(v) => {
                                         if v == &curr_state && curr_state != State(utils::get_hash_val(&String::from("Start").into_bytes())) {
@@ -138,10 +145,11 @@ mod tests {
 
         static tokens: &'static str = 
                 "
-                Alpha => 65..123
+                Alpha => 65..91
+                Alpha => 97..123
                 Number => 48..57
                 Whitespace => 9,10,13,32
-                Punctuation => 33..46
+                Punctuation => 33..47
                 Punctuation => 58..65
                 Slash => 47
                 ";
@@ -238,6 +246,35 @@ mod tests {
                 assert_eq!(tokenized.1.len(), 3);
                 assert_eq!(tokenized.1[0], test_state_alpha);
                 assert_eq!(tokenized.1[2], test_state_pos);
+
+        }
+
+        #[test]
+        fn tokenize_test_3() {
+
+                let bs: Vec<u8> = String::from("foo ^ foo").into_bytes();
+
+                let test_alpha = Token { t: TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes())), value: String::from("foo").into_bytes() };
+                let test_white = Token { t: TokenType(utils::get_hash_val(&String::from("Whitespace").into_bytes())), value: String::from("  ").into_bytes() };
+                //let test_unknown = Token { t: TokenType(utils::get_hash_val(&String::from("Unknown").into_bytes())), value: String::from("^").into_bytes() };
+
+                let test_state_alpha = State(utils::get_hash_val(&String::from("Alpha").into_bytes()));
+                let test_state_white = State(utils::get_hash_val(&String::from("Whitespace").into_bytes()));
+                //let test_state_unkown = State(utils::get_hash_val(&String::from("Unknown").into_bytes()));
+
+                let mut tokenizer = Tokenizer::new(&tokens, &transitions);
+
+                let tokenized: (Vec<Token>, Vec<State>) = tokenizer.tokenize(&bs);
+
+                assert_eq!(tokenized.0.len(), 3);
+                assert_eq!(tokenized.0[0], test_alpha);
+                assert_eq!(tokenized.0[1], test_white);
+                assert_eq!(tokenized.0[2], test_alpha);
+
+                assert_eq!(tokenized.1.len(), 3);
+                assert_eq!(tokenized.1[0], test_state_alpha);
+                assert_eq!(tokenized.1[1], test_state_white);
+                assert_eq!(tokenized.1[2], test_state_alpha);
 
         }
 }

@@ -6,4 +6,4 @@ mod tokenizer;
 mod invertedindex;
 mod stemmer;
 mod postagger;
-mod corpus;
+//mod corpus;
