@@ -85,10 +85,10 @@ impl Tokenizer {
                 let mut last_byte_t = TokenType(0);
 
                 while !raw_bytes.is_empty() {
-                        println!("Byte: {:?}", raw_bytes[0]);
-                        println!("curr_token: {:?}", curr_token);
-                        println!("curr_state: {:?}", curr_state);
-                        println!("tokens: {:?}", tokens);    
+                        //println!("Byte: {:?}", raw_bytes[0]);
+                        //println!("curr_token: {:?}", curr_token);
+                        //println!("curr_state: {:?}", curr_state);
+                        //println!("tokens: {:?}", tokens);    
 
                         let curr_byte = raw_bytes[0];
                         let curr_byte_t = match self.token_map.get(&curr_byte) {
@@ -290,7 +290,7 @@ mod tests {
 
                 let tokenized: (Vec<Token>, Vec<State>) = tokenizer.tokenize(&brown_ca01.as_bytes().to_vec());
 
-                assert_eq!(tokenized.0.len(), 100);                
+                assert_eq!(tokenized.0.len(), 110);                
         }
 }
 
