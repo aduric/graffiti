@@ -15,21 +15,26 @@ pub mod utils {
         let cap = a_len * b_len;
         let mut lev: Vec<u32> = Vec::with_capacity(cap);
 
-        for j in 0..b_len {
-            lev[j] = j as u32;
+        for m in 0..(a_len*b_len) {
+            lev.push(0);
         };
 
-        for i in 0..a_len {
+        for n in 1..b_len {
+            lev[n] = n as u32;
+        }
+
+        for i in 1..a_len {
             lev[i*a_len] = i as u32;
-            for j in 0..b_len {
-                if a[i*a_len] == b[i*a_len+j] {
-                    lev[i*a_len+j] = min(lev[i*a_len+j-1] + 1, min(lev[i*(a_len-1)+j] + 1, lev[i*(a_len-1)+j-1]));
+            for j in 1..b_len {
+                if a[i] == b[j] {
+                    lev[i*a_len+j] = min(lev[(i-1)*a_len+j] + 1, min(lev[i*a_len+j-1] + 1, lev[(i-1)*a_len+j-1]));
                 } else {
-                    lev[i*a_len+j] = min(lev[i*a_len+j-1] + 1, min(lev[i*(a_len-1)+j] + 1, lev[i*(a_len-1)+j-1] + 1));
+                    lev[i*a_len+j] = min(lev[(i-1)*a_len+j] + 1, min(lev[i*a_len+j-1] + 1, lev[(i-1)*a_len+j-1] + 1));
                 }
             }
         };
-        lev[(a_len-1)*(b_len-1)-1]
+
+        lev[(a_len-1)*(b_len)]
     }
 }
 
@@ -45,6 +50,8 @@ mod tests {
         let b_vec: Vec<u8> = String::from("altruistic").into_bytes();
 
         let lev = utils::levenshtein(&a_vec, &b_vec);
+
+        println!("{:?}", lev);
 
         assert!(lev == 6);
     }
