@@ -27,19 +27,18 @@ impl Corpus {
     pub fn words(&mut self, pos: usize) -> Vec<Vec<u8>> {
         let contents = self.scanners[pos].scan().unwrap();
 
-        let tokenized = self.tokenizer.tokenize(&contents);
-        let tokens = tokenized.0;
+        let tokens = self.tokenizer.tokenize(&contents);
 
-        let mut filtered_tokens = tokens.into_iter().filter(|f| f.t == TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
+        let mut filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
         filtered_tokens.into_iter().map(|t| t.value).collect::<Vec<Vec<u8>>>()        
     }
     pub fn allwords(&mut self) -> Vec<Vec<u8>> {
         let mut all_tokens: Vec<Vec<u8>> = Vec::new();
         for s in &self.scanners {
             let contents = s.scan().unwrap();
-            let tokenized = self.tokenizer.tokenize(&contents);
-            let tokens = tokenized.0;
-            let filtered_tokens = tokens.into_iter().filter(|f| f.t == TokenType(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
+            let tokens = self.tokenizer.tokenize(&contents);
+
+            let filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
             all_tokens.append(&mut filtered_tokens.into_iter().map(|t| t.value).collect::<Vec<Vec<u8>>>());
         };
         all_tokens
@@ -51,6 +50,7 @@ impl Corpus {
 #[cfg(test)]
 mod tests {
 
+    use std::str;
     use super::*;
     use scanner::*;
     use tokenizer::*;
@@ -87,7 +87,7 @@ mod tests {
     fn test_get_files() {
         let mut tokenizer = Tokenizer::new(&tokens, &transitions);
 
-        let mut brown_corpus = Corpus::new("/home/adnan/Downloads/brown/", tokenizer);
+        let mut brown_corpus = Corpus::new("/brown/", tokenizer);
 
         let scanners = brown_corpus.get_scanners();
 
@@ -99,10 +99,14 @@ mod tests {
 
         let mut tokenizer = Tokenizer::new(&tokens, &transitions);
 
-        let mut brown_corpus = Corpus::new("/home/adnan/Downloads/brown/", tokenizer);
+        let mut brown_corpus = Corpus::new("/brown/", tokenizer);
 
         let words = brown_corpus.words(0);
+        let num_words = words.len();
 
-        assert!(words.len() == 1024);
+        println!("{:?}", &words.into_iter().map(|w_v| String::from_utf8(w_v).unwrap()).collect::<Vec<String>>());
+        println!("{:?}", num_words);
+
+        assert!(num_words == 2088);
     }
 }
