@@ -48,7 +48,7 @@ mod tests {
 
         #[test]
         fn read_test_file_under_buffer_size() {
-                let mut scanner = Scanner::new("C:/seen/foo.txt");
+                let mut scanner = Scanner::new("./test_assets/foo.txt");
 
                 let contents = scanner.scan().unwrap();
 
