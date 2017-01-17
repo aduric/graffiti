@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
-mod utils;
-mod scanner;
-mod tokenizer;
-mod invertedindex;
-mod stemmer;
-mod postagger;
-mod corpus;
+pub mod utils;
+pub mod scanner;
+pub mod tokenizer;
+pub mod invertedindex;
+pub mod stemmer;
+pub mod postagger;
+pub mod corpus;
