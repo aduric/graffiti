@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::str;
 
 pub struct InvertedIndex {
     dictionary: HashMap<u32,Vec<u32>>,
@@ -17,26 +16,26 @@ impl InvertedIndex {
             tws: HashMap::new()
         }
     }
-    pub fn get_hash_val(&self, token: &Vec<u8>) -> u32 {
+    pub fn get_hash_val(&self, token: &[u8]) -> u32 {
         let mut hash_val: u32 = 0;
         for i in 0..token.len() {
             hash_val += i as u32 * token[i] as u32;
         };
         hash_val
     }
-    pub fn get_docs(&self, token: &Vec<u8>) -> &Vec<u32> {
+    pub fn get_docs(&self, token: &[u8]) -> &Vec<u32> {
         let s: u32 = self.get_hash_val(token);
         &self.dictionary[&s]
     }
-    pub fn get_tfs(&self, token: &Vec<u8>) -> &Vec<u32> {
+    pub fn get_tfs(&self, token: &[u8]) -> &Vec<u32> {
         let s: u32 = self.get_hash_val(token);
         &self.tfs[&s]
     }
-    pub fn get_idf(&self, token: &Vec<u8>) -> u32 {
+    pub fn get_idf(&self, token: &[u8]) -> u32 {
         let s: u32 = self.get_hash_val(token);
         self.idfs[&s]
     }
-    pub fn add_doc(&mut self, tokens: &Vec<Vec<u8>>, doc: u32) {
+    pub fn add_doc(&mut self, tokens: &[Vec<u8>], doc: u32) {
         let mut token_freqs = HashMap::new();
         for token in tokens {
             let t = token_freqs.entry(token).or_insert(0);
@@ -52,10 +51,10 @@ impl InvertedIndex {
             *w += (freq as f32 * *x as f32).powi(2);
         }
     }
-    pub fn get_ranking(&self, query: &Vec<Vec<u8>>) -> HashMap<u32,f64> {
+    pub fn get_ranking(&self, query: &[Vec<u8>]) -> HashMap<u32,f64> {
         let mut weights: HashMap<u32,u64> = HashMap::new();
         let mut rankings: HashMap<u32,f64> = HashMap::new();
-        let mut token_freqs: HashMap<&Vec<u8>,u32> = HashMap::new();
+        let mut token_freqs: HashMap<&[u8],u32> = HashMap::new();
         let mut query_weight = 0.0;
         for token in query {
             let t = token_freqs.entry(token).or_insert(0);
@@ -91,12 +90,14 @@ mod tests {
     #[test]
     fn get_docs_at() {
         let mut ii = InvertedIndex::new();
-        let v = vec![97, 98, 99];
-        let v_test = vec![97, 98, 99];
-        let mut doc = Vec::new();
-        doc.push(v);
+
+        let doc = vec![
+            vec![97, 98, 99]
+        ];
 
         ii.add_doc(&doc, 42);
+
+        let v_test = vec![97, 98, 99];
 
         assert!((&ii.get_docs(&v_test)).len() == 1);
         assert!((&ii.get_tfs(&v_test)).len() == 1);
@@ -105,19 +106,22 @@ mod tests {
     #[test]
     fn search() {
         let mut ii = InvertedIndex::new();
-        let mut doc1 = Vec::new();
-        doc1.push(vec![97, 98, 99]);
-        doc1.push(vec![99, 100, 101]);
+        let doc1 = vec![
+            vec![97, 98, 99],
+            vec![99, 100, 101]
+        ];
 
-        let mut doc2 = Vec::new();
-        doc2.push(vec![1, 2, 3]);
-        doc2.push(vec![4, 5, 6]);
+        let doc2 = vec![
+            vec![1, 2, 3],
+            vec![4, 5, 6]
+        ];
 
         ii.add_doc(&doc1, 42);
         ii.add_doc(&doc2, 43);
 
-        let mut query = Vec::new();
-        query.push(vec![97, 98, 99]);
+        let query = vec![
+            vec![97, 98, 99]
+        ];
         
         ii.print_internal();
 
