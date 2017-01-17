@@ -75,7 +75,7 @@ impl Tokenizer {
                 };
                 token_map
         }
-        pub fn tokenize(&mut self, token_str: &Vec<u8>) -> Vec<Token> {
+        pub fn tokenize(&self, token_str: &Vec<u8>) -> Vec<Token> {
                 let mut tokens: Vec<Token> = Vec::new();
                 let mut states: Vec<State> = Vec::new();
 

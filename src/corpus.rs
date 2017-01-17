@@ -67,7 +67,7 @@ impl Corpus {
     pub fn get_scanners(&self) -> &Vec<Scanner> {
         &self.scanners
     }
-    pub fn words(&mut self, pos: usize) -> Vec<Vec<u8>> {
+    pub fn words(&self, pos: usize) -> Vec<Vec<u8>> {
         let contents = self.scanners[pos].scan().unwrap();
 
         let tokens = self.tokenizer.tokenize(&contents);
