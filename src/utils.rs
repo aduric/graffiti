@@ -1,23 +1,18 @@
 pub mod utils {
-
-    use std::cmp::min;
-
-    pub fn get_hash_val(token: &Vec<u8>) -> u32 {
+    pub fn get_hash_val(token: &[u8]) -> u32 {
         let mut hash_val: u32 = 0;
         for i in 0..token.len() {
             hash_val += i as u32 * token[i] as u32;
         };
         hash_val
     }
-    pub fn levenshtein(a: &Vec<u8>, b: &Vec<u8>) -> u32 {
+
+    pub fn levenshtein(a: &[u8], b: &[u8]) -> u32 {
+        use std::cmp::min;
+
         let a_len = a.len();
         let b_len = b.len();
-        let cap = a_len * b_len;
-        let mut lev: Vec<u32> = Vec::with_capacity(cap);
-
-        for m in 0..(a_len*b_len) {
-            lev.push(0);
-        };
+        let mut lev = vec![0u32; a_len * b_len];
 
         for n in 1..b_len {
             lev[n] = n as u32;
@@ -40,16 +35,14 @@ pub mod utils {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
-    use std::str;
 
     #[test]
     fn get_levenshtein_distance() {
-        let a_vec: Vec<u8> = String::from("algorithm").into_bytes();
-        let b_vec: Vec<u8> = String::from("altruistic").into_bytes();
+        let a: &[u8] = b"algorithm";
+        let b: &[u8] = b"altruistic";
 
-        let lev = utils::levenshtein(&a_vec, &b_vec);
+        let lev = utils::levenshtein(&a, &b);
 
         println!("{:?}", lev);
 
