@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::str;
 use utils::*;
 
 #[derive(PartialEq, Debug)]
@@ -15,24 +14,22 @@ pub struct PosTagger {
 
 impl PosTagger {
     pub fn new(suffix_map: HashMap<Vec<u8>,Tag>) -> Self {
-        let mut _tag_map = HashMap::new();
-        for (s, t) in suffix_map {
-            _tag_map.insert(utils::get_hash_val(&s), t);
-        };
+        let tag_map = suffix_map.into_iter()
+            .map(|s| (utils::get_hash_val(&s.0), s.1))
+            .collect();
+        
         PosTagger {
-            tag_map: _tag_map,
+            tag_map: tag_map,
         }
     }
-    pub fn tag(&self, token: &Vec<u8>) -> Option<&Tag> {
-        let mut tag = None;
-        for c in (0..token.len()).rev() {
-            let suffix_split = token.clone().split_off(c+1);
-            let suffix = self.tag_map.get(&utils::get_hash_val(&suffix_split));
-            if suffix != None {
-                tag = suffix;
-            }
-        };
-        tag
+
+    pub fn tag(&self, token: &[u8]) -> Option<&Tag> {
+        (0..token.len())
+            .rev()
+            .filter_map(|i| {
+                self.tag_map.get(&utils::get_hash_val(&token[i+1..]))
+            })
+            .last()
     }
 }
 

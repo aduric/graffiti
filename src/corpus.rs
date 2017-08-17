@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::str;
 use std::fs;
 use utils::*;
 
@@ -67,12 +65,12 @@ impl Corpus {
     pub fn get_scanners(&self) -> &Vec<Scanner> {
         &self.scanners
     }
-    pub fn words(&self, pos: usize) -> Vec<Vec<u8>> {
+    pub fn words(&mut self, pos: usize) -> Vec<Vec<u8>> {
         let contents = self.scanners[pos].scan().unwrap();
 
         let tokens = self.tokenizer.tokenize(&contents);
 
-        let mut filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
+        let filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(b"Alpha"))).collect::<Vec<Token>>();
         filtered_tokens.into_iter().map(|t| t.value).collect::<Vec<Vec<u8>>>()        
     }
     pub fn allwords(&mut self) -> Vec<Vec<u8>> {
@@ -81,7 +79,7 @@ impl Corpus {
             let contents = s.scan().unwrap();
             let tokens = self.tokenizer.tokenize(&contents);
 
-            let filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(&String::from("Alpha").into_bytes()))).collect::<Vec<Token>>();
+            let filtered_tokens = tokens.into_iter().filter(|f| f.s == State(utils::get_hash_val(b"Alpha"))).collect::<Vec<Token>>();
             all_tokens.append(&mut filtered_tokens.into_iter().map(|t| t.value).collect::<Vec<Vec<u8>>>());
         };
         all_tokens
@@ -95,10 +93,9 @@ mod tests {
 
     use std::str;
     use super::*;
-    use scanner::*;
     use tokenizer::*;
 
-    static tokens: &'static str = 
+    static TOKENS: &'static str = 
             "
             Alpha => 65..123
             Number => 48..57
@@ -108,7 +105,7 @@ mod tests {
             Slash => 47
             ";
 
-    static transitions: &'static str = 
+    static TRANSITIONS: &'static str = 
             "
             Start => Alpha => Alpha
             Start => Number => Number
@@ -128,9 +125,9 @@ mod tests {
 
     #[test]
     fn test_get_files() {
-        let mut tokenizer = Tokenizer::new(&tokens, &transitions);
+        let tokenizer = Tokenizer::new(&TOKENS, &TRANSITIONS);
 
-        let mut brown_corpus = Corpus::new("/brown/", tokenizer);
+        let brown_corpus = Corpus::new("/brown/", tokenizer);
 
         let scanners = brown_corpus.get_scanners();
 
@@ -139,8 +136,7 @@ mod tests {
 
     #[test]
     fn test_get_words() {
-
-        let mut tokenizer = Tokenizer::new(&tokens, &transitions);
+        let tokenizer = Tokenizer::new(&TOKENS, &TRANSITIONS);
 
         let mut brown_corpus = Corpus::new("/brown/", tokenizer);
 
